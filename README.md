@@ -31,6 +31,9 @@ $ cat myth.diff.stat.txt
 db	core_number	uniq_number	core_number_percent	uniq_number_percent	total_number
 t.list	1	1	0.5	0.5	2
 q.list	1	3	0.25	0.75	4
+
+$ cat myth.coreid.list
+A1
 ```
 ```
 Usage:
