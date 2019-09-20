@@ -1,4 +1,8 @@
 # grepfile
+usage:
+```
+./grepfile.wrap.x86-64 t.list  q.list
+```
 ```
 Usage:
   /home/sikaiwei/crystal/grepfile/grepfile [flags...] <target> <query> [arg...]
@@ -20,3 +24,4 @@ Arguments:
   target (required)                         # target file
   query (required)                          # query file
   ```
+
