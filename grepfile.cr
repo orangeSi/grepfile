@@ -1,5 +1,5 @@
 require "admiral"
-class ReadsMapPositionStat < Admiral::Command
+class GrepFile < Admiral::Command
 	define_argument target,
 		description: "target file",
 		required: true
@@ -38,9 +38,10 @@ class ReadsMapPositionStat < Admiral::Command
 	def run
 		if ARGV.size == 0
 			#puts "complie time: #{COMPILE_TIME}"
-			app = __FILE__.gsub(/\.cr$/, "")
-			puts `#{app} --help`
-			exit 1
+			#app = __FILE__.gsub(/\.cr$/, "")
+			#puts `#{app} --help`
+			#exit 1
+			GrepFile.run "--help"
 		end
 
 		query_ids = {} of String => String
@@ -125,4 +126,4 @@ class ReadsMapPositionStat < Admiral::Command
 	end
 end
 
-ReadsMapPositionStat.run
+GrepFile.run
