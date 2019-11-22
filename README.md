@@ -34,7 +34,11 @@ q.list	1	3	0.25	0.75	4
 
 $ cat myth.coreid.list
 A1
+
+$ ldd grepfile
+	statically linked
 ```
+
 ```
 Usage:
 /home/sikaiwei/crystal/grepfile/grepfile [flags...] <target> <query> [arg...]
@@ -55,5 +59,6 @@ A replace for grep -f(which cost too many memory)
 	Arguments:
 	target (required)                           # target file
 	query (required)                            # query file
+
 ```
 
