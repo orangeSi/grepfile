@@ -18,6 +18,7 @@ A1
 
 
 $ ldd grepfile
+	not a dynamic executable
 ```
 
 
