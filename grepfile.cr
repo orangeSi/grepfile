@@ -18,7 +18,9 @@ class GrepFile < Admiral::Command
 	define_flag delete_chars_from_column : String,
 		default: "^>",
 		description: "delete id first chars, support regex syntax"
-
+	define_flag invert_match : Int32,
+		default: 0_i32,
+		description: "Invert the sense of matching, to select non-matching lines"
 	define_flag sep_query : String,
 		default: "\t",
 		description: "query separator, '\\t' or '\\s'"
@@ -54,7 +56,7 @@ class GrepFile < Admiral::Command
 			next if ignore_line_mathed_by !="" && line.match(/#{ignore_line_mathed_by}/)
 			next if line.match(/^\s*$/)
 			arr = line.split(/#{flags.sep_query}/)
-			raise "error: #{arguments.query} only have #{arr.size} column, but --column_query #{flags.column_query}, try to change --query-sep " if flags.column_query  > arr.size
+			raise "error: #{arguments.query} only have #{arr.size} column, but --column_query #{flags.column_query}, try to change --sep_query for line: #{arr}\n" if flags.column_query  > arr.size
 			id = arr[flags.column_query - 1]
 			id = id.gsub(/#{flags.delete_chars_from_column}/, "") if flags.delete_chars_from_column != ""
 			unless query_ids.has_key?(id)
@@ -71,12 +73,17 @@ class GrepFile < Admiral::Command
 			next if ignore_line_mathed_by != "" && line.match(/#{ignore_line_mathed_by}/)
 			next if line.match(/^\s*$/)
 			arr = line.split(/#{flags.sep_target}/)
-			raise "error: #{arguments.target} only have #{arr.size} column, but --column_target #{flags.column_target}, try to change --target-sep " if flags.column_target  > arr.size
+			raise "error: #{arguments.target} only have #{arr.size} column, but --column_target #{flags.column_target}, try to change --sep_target for line: #{arr}\n" if flags.column_target  > arr.size
 			id = arr[flags.column_target - 1]
 			id = id.gsub(/#{flags.delete_chars_from_column}/, "") if flags.delete_chars_from_column != ""
-
-			if query_ids.has_key?(id)
-				puts "#{line}"		
+			if flags.invert_match == 0
+				if query_ids.has_key?(id)
+					puts "#{line}"		
+				end
+			else
+				if !query_ids.has_key?(id)
+					puts "#{line}"		
+				end
 			end
 		end
 
