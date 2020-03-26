@@ -13,7 +13,7 @@ $ cat q.list
 A2
 >B
 
-$ ./grepfile t.list  q.list  # by default: --ignore-line-mathed-by  ^[#@] --delete-chars-from-column "^>"
+$ ./grepfile t.list  q.list  # by default: --ignore-line-mathed-by  "^[#@]" --delete-chars-from-column "^>"
 A1
 
 
