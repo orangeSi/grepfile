@@ -30,7 +30,7 @@ class GrepFile < Admiral::Command
 
 	
 	define_help description: "A replace for grep -f(which cost too many memory)"
-	define_version "1.0.2"
+	define_version "1.0.3"
 
 	COMPILE_TIME = Time.local
 
