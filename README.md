@@ -33,6 +33,7 @@ Flags:
   --column-query (default: 1)
   --column-target (default: 1)
   --delete-chars-from-column (default: "^>")  # delete id first chars, support regex syntax
+  --exact-match (default: 1)                  # if >=1,  equal totally else regex macth
   --help                                      # Displays help for the current command.
   --ignore-line-mathed-by (default: "^[#@]")  # if id start with # or @, will remove # or @, support regex syntax
   --invert-match (default: 0)                 # Invert the sense of matching, to select non-matching lines
