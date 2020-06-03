@@ -16,6 +16,10 @@ A2
 $ ./grepfile t.list  q.list  # by default: --ignore-line-mathed-by  "^[#@]" --delete-chars-from-column "^>"
 A1
 
+$./grepfile t.list  q.list --exact-match 0
+>B1
+A1
+
 
 $ ldd grepfile
 	not a dynamic executable
@@ -23,7 +27,7 @@ $ ldd grepfile
 
 
 ```
-Contact: ilikeorangeapple@gmail.com or go to https://github.com/orangeSi/grepfile/issues
+Contact: https://github.com/orangeSi/grepfile/issues
 Usage:
   grepfile [flags...] <target> <query> [arg...]
 
