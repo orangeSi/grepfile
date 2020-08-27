@@ -43,7 +43,7 @@ class GrepFile < Admiral::Command
 			#app = __FILE__.gsub(/\.cr$/, "")
 			#puts `#{app} --help`
 			#exit 1
-			puts "Contact: ilikeorangeapple@gmail.com or go to https://github.com/orangeSi/grepfile/issues"
+			puts "Contact: https://github.com/orangeSi/grepfile/issues"
 			GrepFile.run "--help"
 		end
 
@@ -93,13 +93,24 @@ class GrepFile < Admiral::Command
 					end
 				end
 				
-			else
+			else # flags.invert_match >=1
 				if flags.exact_match >=1
 					if !query_ids.has_key?(id)
 						puts "#{line}"		
 					end
 				else
-					raise "error: --invert_match #{flags.invert_match} not support --exact_match=#{flags.exact_match}"
+					#raise "error: --invert_match #{flags.invert_match} not support --exact_match=#{flags.exact_match}"
+					matched_flag = 0
+					query_ids.each_key do |k|
+						if id=~ /#{k}/
+							matched_flag = 1
+							break
+						end
+					end
+					if matched_flag == 0
+						puts "#{line}"			
+					end
+					
 				end
 			end
 		end

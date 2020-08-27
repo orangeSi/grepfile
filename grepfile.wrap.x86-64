@@ -1,0 +1,28 @@
+
+#/bin/sh
+source /home/sikaiwei/crystal/env.sh
+base=`dirname $(readlink -f $0)`
+bin_name=grepfile
+binary=/home/sikaiwei/crystal/grepfile
+
+if [ ! -f "$binary" ]
+then
+
+	if [ ! -f "$base/$bin_name" ];
+	then
+		echo "error, $binary or $base/$bin_name both not exists"
+		exit
+	else
+		binary=$base/$bin_name
+	fi
+fi
+
+
+if [ "$1" == "" ];
+then
+	$binary --help
+	exit
+fi
+time $binary $@ &&
+echo done
+
