@@ -31,6 +31,10 @@ $ ldd grepfile
 	not a dynamic executable
 ```
 
+Install:
+```
+directyly use grepfile binary executable file in Linux or complie grepfile.cr with crystal lang
+```
 
 ```
 Contact: https://github.com/orangeSi/grepfile/issues
