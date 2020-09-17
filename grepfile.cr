@@ -1,5 +1,5 @@
 require "admiral"
-require "compress/gzip"
+require "gzip"
 
 class GrepFile < Admiral::Command
 	define_argument target,
@@ -63,7 +63,7 @@ class GrepFile < Admiral::Command
 				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by=flags.ignore_line_mathed_by, sep_query=flags.sep_query, query=arguments.query, delete_chars_from_column=flags.delete_chars_from_column)
 			end
 		elsif arguments.query.match(/.*\.gz$/) # gzip file
-			Compress::Gzip::Reader.open(arguments.query) do |gfile|
+			Gzip::Reader.open(arguments.query) do |gfile|
 				gfile.each_line do |line|
 					query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by=flags.ignore_line_mathed_by, sep_query=flags.sep_query, query=arguments.query, delete_chars_from_column=flags.delete_chars_from_column)
 				end
