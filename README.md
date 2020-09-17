@@ -1,6 +1,6 @@
 # grepfile
-### a alternative for $grep -f A.list B.list which cost too many memory and time
-usage:
+a alternative for $grep -f A.list B.list which cost too many memory and time
+### usage:
 ```
 $ cat t.list
 @ddd
@@ -31,11 +31,12 @@ $ ldd grepfile
 	not a dynamic executable
 ```
 
-Install:
+### Install:
 ```
 directyly use grepfile binary executable file in Linux or complie grepfile.cr with crystal lang
 ```
 
+### document
 ```
 Contact: https://github.com/orangeSi/grepfile/issues
 Usage:
