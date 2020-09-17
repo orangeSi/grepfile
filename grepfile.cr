@@ -1,10 +1,12 @@
 require "admiral"
+require "compress/gzip"
+
 class GrepFile < Admiral::Command
 	define_argument target,
-		description: "target file",
+		description: "target file, support .gz file or stdin(by -)",
 		required: true
 	define_argument query,
-		description: "query file",
+		description: "query file, support .gz file or stdin(by -)",
 		required: true
 	define_flag column_target : Int32,
 		default: 1_i32,
@@ -32,8 +34,8 @@ class GrepFile < Admiral::Command
 		description: "target separator, '\\t' or '\\s'"
 
 	
-	define_help description: "A replace for grep -f(which cost too many memory)"
-	define_version "1.0.3"
+	define_help description: "A replace for $ grep -f (which cost too many memory and time) in Linux"
+	define_version "1.0.4"
 
 	COMPILE_TIME = Time.local
 
@@ -48,25 +50,29 @@ class GrepFile < Admiral::Command
 		end
 
 		query_ids = {} of String => String
-		query_ids_num = 0
 		ignore_line_mathed_by = flags.ignore_line_mathed_by
 		ignore = false
 		query_name = Path[arguments.query].basename
 		target_name = Path[arguments.target].basename
 
+		
 		# read query file
-		File.each_line(arguments.query) do |line|
-			next if ignore_line_mathed_by !="" && line.match(/#{ignore_line_mathed_by}/)
-			next if line.match(/^\s*$/)
-			arr = line.split(/#{flags.sep_query}/)
-			raise "error: #{arguments.query} only have #{arr.size} column, but --column_query #{flags.column_query}, try to change --sep_query for line: #{arr}\n" if flags.column_query  > arr.size
-			id = arr[flags.column_query - 1]
-			id = id.gsub(/#{flags.delete_chars_from_column}/, "") if flags.delete_chars_from_column != ""
-			unless query_ids.has_key?(id)
-				query_ids_num = query_ids_num +1
-				query_ids[id] = "" 
+		#puts "arguments.query is #{arguments.query}"
+		if arguments.query == "-"
+			STDIN.each_line do |line|
+				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by=flags.ignore_line_mathed_by, sep_query=flags.sep_query, query=arguments.query, delete_chars_from_column=flags.delete_chars_from_column)
 			end
-		end
+		elsif arguments.query.match(/.*\.gz$/) # gzip file
+			Compress::Gzip::Reader.open(arguments.query) do |gfile|
+				gfile.each_line do |line|
+					query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by=flags.ignore_line_mathed_by, sep_query=flags.sep_query, query=arguments.query, delete_chars_from_column=flags.delete_chars_from_column)
+				end
+			end
+		else # not gzip file
+			File.each_line(arguments.query) do |line|
+				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by=flags.ignore_line_mathed_by, sep_query=flags.sep_query, query=arguments.query, delete_chars_from_column=flags.delete_chars_from_column)
+			end
+		end	
 
 
 		## read target file
@@ -115,6 +121,18 @@ class GrepFile < Admiral::Command
 			end
 		end
 
+	end
+	def read_query_file(line : String, column_query : Int32, query_ids : Hash(String, String), ignore_line_mathed_by : String = "", sep_query : String = "\t", query : String = "", delete_chars_from_column : String = "")
+		return query_ids if ignore_line_mathed_by !="" && line.match(/#{ignore_line_mathed_by}/)
+		return query_ids if line.match(/^\s*$/)
+		arr = line.split(/#{sep_query}/)
+		raise "error: query #{query} only have #{arr.size} columns, but --column_query #{column_query}, try to change --sep_query for line: #{arr}\n" if column_query  > arr.size
+		id = arr[column_query - 1]
+		id = id.gsub(/#{delete_chars_from_column}/, "") if delete_chars_from_column != ""
+		unless query_ids.has_key?(id)
+			query_ids[id] = "" 
+		end
+		return query_ids	
 	end
 end
 
