@@ -3,10 +3,10 @@ require "gzip"
 
 class GrepFile < Admiral::Command
 	define_argument target,
-		description: "target file, support .gz file or stdin(by -)",
+		description: "target file, support .gz file or stdin(by - which is not support yet)",
 		required: true
 	define_argument query,
-		description: "query file, support .gz file or stdin(by -)",
+		description: "query file, support .gz file or stdin(by - which is not support yet)",
 		required: true
 	define_flag column_target : Int32,
 		default: 1_i32,
