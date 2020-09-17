@@ -1,4 +1,5 @@
 # grepfile
+## a alternative for $grep -f A.list B.list which cost too many memory and time
 usage:
 ```
 $ cat t.list
