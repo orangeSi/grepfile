@@ -17,6 +17,9 @@ class GrepFile < Admiral::Command
 	define_flag ignore_line_mathed_by : String,
 		default: "^[#@]",
 		description: "if content of column start with # or @, will skip this line, support regex syntax"
+	define_flag ignore_case : Int32,
+		default: 0_i32,
+		description: "if set to 1 mean will ignore case for query and target match, default 0"
 	define_flag delete_chars_from_column : String,
 		default: "^>",
 		description: "delete > from content of column, support regex syntax"
@@ -58,17 +61,17 @@ class GrepFile < Admiral::Command
 		#puts "arguments.query is #{arguments.query}"
 		if ARGV[1] == "-"
 			STDIN.each_line do |line|
-				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: "stdin", delete_chars_from_column: flags.delete_chars_from_column)
+				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: "stdin", delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
 			end
 		elsif query.match(/.*\.gz$/) # gzip file
 			Gzip::Reader.open(query) do |gfile|
 				gfile.each_line do |line|
-					query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column)
+					query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
 				end
 			end
 		else # not gzip file
 			File.each_line(query) do |line|
-				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column)
+				query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
 			end
 		end	
 
@@ -78,28 +81,29 @@ class GrepFile < Admiral::Command
 		target_ids_num = 0
 		if ARGV[0] == "-"
 			STDIN.each_line do |line|
-				read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: "target", column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match)
+				read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: "target", column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match, ignore_case: flags.ignore_case)
 			end
 		elsif target.match(/.*\.gz$/) # gzip file
 			Gzip::Reader.open(target) do |gfile|
 				gfile.each_line do |line|
-					read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: target, column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match)
+					read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: target, column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match, ignore_case: flags.ignore_case)
 				end
 			end	
 		else # not gzip file
 			File.each_line(target) do |line|
-				read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: target, column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match)
+				read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: target, column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match, ignore_case: flags.ignore_case)
 			end
 		end
 	end
 
-	def read_target_file(line : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "^#", sep_target : String = "\t", target : String = "target", column_target : Int32 = 1, delete_chars_from_column : String = "^>", invert_match : Int32 = 0, exact_match : Int32 = 0)
+	def read_target_file(line : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "^#", sep_target : String = "\t", target : String = "target", column_target : Int32 = 1, delete_chars_from_column : String = "^>", invert_match : Int32 = 0, exact_match : Int32 = 0, ignore_case : Int32 = 0)
 		return if ignore_line_mathed_by != "" && line.match(/#{ignore_line_mathed_by}/)
 		return if line.match(/^\s*$/)
 		arr = line.split(/#{sep_target}/)
 		raise "error: #{target} only have #{arr.size} column in line #{line}, but --column_target #{column_target}, try to change --sep_target for line: #{arr}\n" if column_target  > arr.size
 		id = arr[column_target - 1]
 		id = id.gsub(/#{delete_chars_from_column}/, "") if delete_chars_from_column != ""
+		id = id.upcase if ignore_case > 0
 			if invert_match == 0
 				if exact_match >=1
 					if query_ids.has_key?(id)
@@ -136,13 +140,14 @@ class GrepFile < Admiral::Command
 
 	end
 
-	def read_query_file(line : String, column_query : Int32, query_ids : Hash(String, String), ignore_line_mathed_by : String = "", sep_query : String = "\t", query : String = "", delete_chars_from_column : String = "")
+	def read_query_file(line : String, column_query : Int32, query_ids : Hash(String, String), ignore_line_mathed_by : String = "", sep_query : String = "\t", query : String = "", delete_chars_from_column : String = "", ignore_case : Int32 = 0)
 		return query_ids if ignore_line_mathed_by !="" && line.match(/#{ignore_line_mathed_by}/)
 		return query_ids if line.match(/^\s*$/)
 		arr = line.split(/#{sep_query}/)
 		raise "error: query #{query} only have #{arr.size} columns, but --column_query #{column_query}, try to change --sep_query for line: #{arr}\n" if column_query  > arr.size
 		id = arr[column_query - 1]
 		id = id.gsub(/#{delete_chars_from_column}/, "") if delete_chars_from_column != ""
+		id = id.upcase if ignore_case > 0
 		unless query_ids.has_key?(id)
 			query_ids[id] = "" 
 		end
