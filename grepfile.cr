@@ -58,10 +58,13 @@ class GrepFile < Admiral::Command
     ignore_line_mathed_by = flags.ignore_line_mathed_by
     target = ARGV[0]
     query = ARGV[1]
+    if target == "-" && query == "-"
+      raise "error: target and query should not both be stdin, only one or zero is stdin!"
+    end
 
     # read query file
     # puts "arguments.query is #{arguments.query}"
-    if ARGV[1] == "-"
+    if query == "-"
       STDIN.each_line do |line|
         query_ids = read_query_file(line, flags.column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: "stdin", delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
       end
@@ -82,7 +85,7 @@ class GrepFile < Admiral::Command
     target_ids_num = 0
     sort_output_by_query_flag = (flags.sort_output_by_query >= 1)
     sorted_output = {} of (Bool|String) => String 
-    if ARGV[0] == "-"
+    if target == "-"
       STDIN.each_line do |line|
         output_flag = read_target_file(line, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_target: flags.sep_target, target: "target", column_target: flags.column_target, delete_chars_from_column: flags.delete_chars_from_column, invert_match: flags.invert_match, exact_match: flags.exact_match, ignore_case: flags.ignore_case, sort_output_by_query_flag: sort_output_by_query_flag)
         if output_flag != ""
