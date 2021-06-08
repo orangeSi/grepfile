@@ -33,7 +33,7 @@ $ ldd grepfile
 
 ### Install:
 ```
-directyly use grepfile binary executable file in Linux or complie grepfile.cr with crystal lang
+directyly use grepfile binary executable file in Linux or complie grepfile.cr with crystal lang(v1.0.0)
 ```
 
 ### document
