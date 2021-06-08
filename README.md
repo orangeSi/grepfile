@@ -38,7 +38,7 @@ directyly use grepfile binary executable file in Linux or complie grepfile.cr wi
 
 ### document
 ```
-Contact: https://github.com/orangeSi/grepfile/issues
+ontact: https://github.com/orangeSi/grepfile/issues
 Usage:
   ./grepfile [flags...] <target> <query> [arg...]
 
@@ -50,15 +50,16 @@ Flags:
   --delete-chars-from-column (default: "^>")  # delete > from content of column, support regex syntax
   --exact-match (default: 1)                  # if >=1, mean equal totally else mean macth
   --help                                      # Displays help for the current command.
+  --ignore-case (default: 0)                  # if set to 1 mean will ignore case for query and target match, default 0
   --ignore-line-mathed-by (default: "^[#@]")  # if content of column start with # or @, will skip this line, support regex syntax
   --invert-match (default: 0)                 # if >=1, mean invert the sense of matching, to select non-matching lines
   --sep-query (default: "\t")                 # query separator, '\t' or '\s' or other string
   --sep-target (default: "\t")                # target separator, '\t' or '\s' or other string
+  --sort-output-by-query (default: 0)         # sort ouput by query column order
   --version                                   # Displays the version of the current application.
 
 Arguments:
   target (required)                           # target file, support flat or .gz file or stdin(by -)
   query (required)                            # query file,  support flat or .gz file or stdin(by -)
-
 ```
 
