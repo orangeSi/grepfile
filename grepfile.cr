@@ -25,10 +25,10 @@ class GrepFile < Admiral::Command
     description: "use with --header-query, and not allow with --column_query  together! choose which column to compare for target file, allow multil columns as keyword (example key1,key2,key3)"
   define_flag header_query : Int32,
     default: 1,
-    description: "set which one line is the header of query file"
+    description: "set which one line is the header of query file. only work with  --column-name-query"
   define_flag header_target : Int32,
     default: 1,
-    description: "set which one line is the header of target file"
+    description: "set which one line is the header of target file.  only work with --print-header or --column-name-target"
 
   define_flag sort_output_by_query : Int32,
     default: 0_i32,
