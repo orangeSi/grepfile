@@ -45,18 +45,21 @@ class GrepFile < Admiral::Command
   define_flag invert_match : Int32,
     default: 0_i32,
     description: "if >=1, mean invert the sense of matching, to select non-matching lines"
+  define_flag reverse_complement : Int32,
+    default: 0_i32,
+    description: "if >=1, mean reverse_complement the query"
   define_flag sep_query : String,
     default: "\t",
     description: "query separator, '\\t' or '\\s' or other string"
   define_flag exact_match : Int32,
     default: 1_i32,
-    description: "if >=1, mean equal totally else mean macth"
+    description: "1 -> mean equal totally; 2 -> mean query fully is in target; 3 -> mean target fully is in query"
   define_flag sep_target : String,
     default: "\t",
     description: "target separator, '\\t' or '\\s' or other string"
 
   define_help description: "A replace for $ grep -f (which cost too many memory and time) in Linux"
-  define_version "1.0.4"
+  define_version "1.0.5"
 
   COMPILE_TIME = Time.local
 
@@ -105,7 +108,7 @@ class GrepFile < Admiral::Command
           next
         end
 
-        query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: "stdin", delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
+        query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: "stdin", delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case, reverse_complement: flags.reverse_complement)
       end
     elsif query.match(/.*\.gz$/) # gzip file
       Compress::Gzip::Reader.open(query) do |gfile|
@@ -117,7 +120,7 @@ class GrepFile < Admiral::Command
             next
           end
 
-          query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
+          query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case, reverse_complement: flags.reverse_complement)
         end
       end
     else # not gzip file
@@ -129,7 +132,7 @@ class GrepFile < Admiral::Command
             next
         end
 
-        query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case)
+        query_ids = read_query_file(line, column_query, query_ids, ignore_line_mathed_by: ignore_line_mathed_by, sep_query: flags.sep_query, query: query, delete_chars_from_column: flags.delete_chars_from_column, ignore_case: flags.ignore_case, reverse_complement: flags.reverse_complement)
       end
     end
 
@@ -202,6 +205,22 @@ class GrepFile < Admiral::Command
     end
 
   end
+def reverse_complement(dna : String) : String
+    complement = dna.chars.map do |nucleotide|
+    case nucleotide
+    when 'A' then 'T'
+    when 'T' then 'A'
+    when 'C' then 'G'
+    when 'G' then 'C'
+    when 'a' then 't'
+    when 't' then 'a'
+    when 'c' then 'g'
+    when 'g' then 'c'
+    else nucleotide
+    end
+   end
+   return complement.reverse.join
+end
 
 def get_column_number_by_name(line : String, colname : String, sep : String)
     # get column number by column name
@@ -224,7 +243,7 @@ def get_column_number_by_name(line : String, colname : String, sep : String)
    return column
 end
 
-  def read_target_file(line : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "^#", sep_target : String = "\t", target : String = "target", column_target : String = "1", delete_chars_from_column : String = "^>", invert_match : Int32 = 0, exact_match : Int32 = 0, ignore_case : Int32 = 0, sort_output_by_query_flag : Bool = false)
+  def read_target_file(line : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "^#", sep_target : String = "\t", target : String = "target", column_target : String = "1", delete_chars_from_column : String = "^>", invert_match : Int32 = 0, exact_match : Int32 = 1, ignore_case : Int32 = 0, sort_output_by_query_flag : Bool = false)
     return false if ignore_line_mathed_by != "" && line.match(/#{ignore_line_mathed_by}/)
     return false if line.match(/^\s*$/)
     arr = line.split(/#{sep_target}/)
@@ -245,8 +264,9 @@ end
     output_flag = ""
     id = id.upcase if ignore_case > 0
     #puts "target id = #{id}"
+    #for exact_match: 1 -> mean equal totally; 2 -> mean query 全部被包含在target中; 3 -> 和2相反即target被包含在query中
     if invert_match == 0
-      if exact_match >= 1
+      if exact_match == 1
         if query_ids.has_key?(id)
           if sort_output_by_query_flag
             output_flag = id
@@ -254,7 +274,7 @@ end
             puts "#{line}"
           end
         end
-      else
+      elsif exact_match == 2
         query_ids.each_key do |k|
           if id =~ /#{k}/
             if sort_output_by_query_flag
@@ -265,14 +285,29 @@ end
             break
           end
         end
+      elsif exact_match == 3
+        query_ids.each_key do |k|
+          if k =~ /#{id}/
+            if sort_output_by_query_flag
+              output_flag = k
+            else
+              puts "#{line}"
+            end
+            break
+          end
+        end  
+      else
+         raise "error: exact_match=#{exact_match}, but only support 1/2/3"
       end
     else # flags.invert_match >=1
-      if exact_match >= 1
+      if sort_output_by_query_flag
+         raise "error: --invert_match #{invert_match} not support --sort_output_by_query_flag #{sort_output_by_query_flag}"
+      end
+      if exact_match == 1
         if !query_ids.has_key?(id)
           puts "#{line}"
         end
-      else
-        # raise "error: --invert_match #{flags.invert_match} not support --exact_match=#{flags.exact_match}"
+      elsif exact_match == 2
         matched_flag = 0
         query_ids.each_key do |k|
           if id =~ /#{k}/
@@ -283,12 +318,25 @@ end
         if matched_flag == 0
           puts "#{line}"
         end
+      elsif exact_match == 3
+        matched_flag = 0
+        query_ids.each_key do |k|
+          if k =~ /#{id}/
+            matched_flag = 1
+            break
+          end
+        end
+        if matched_flag == 0
+          puts "#{line}"
+        end
+      else
+         raise "error: exact_match=#{exact_match}, but only support 1/2/3"
       end
     end
     return output_flag
   end
 
-  def read_query_file(line : String, column_query : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "", sep_query : String = "\t", query : String = "", delete_chars_from_column : String = "", ignore_case : Int32 = 0)
+  def read_query_file(line : String, column_query : String, query_ids : Hash(String, String), ignore_line_mathed_by : String = "", sep_query : String = "\t", query : String = "", delete_chars_from_column : String = "", ignore_case : Int32 = 0, reverse_complement : Int32 = 0)
     return query_ids if ignore_line_mathed_by != "" && line.match(/#{ignore_line_mathed_by}/)
     return query_ids if line.match(/^\s*$/)
     arr = line.split(/#{sep_query}/)
@@ -308,6 +356,7 @@ end
     end
 
     id = id.upcase if ignore_case > 0
+    id = reverse_complement(id) if reverse_complement >0
     #puts "query id = #{id}"
     unless query_ids.has_key?(id)
       query_ids[id] = ""
